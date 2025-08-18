@@ -1,0 +1,16 @@
+//kage:unit pixels
+
+package main
+
+func Fragment(dstPos vec4, srcPos vec2) vec4 {
+    // get positons
+    dstcolor := imageSrc1At(srcPos)
+    origin := imageSrc0Origin() // used to center on pallet image
+
+    // gets pallet color
+    palletPos := vec2(origin.x+dstcolor.r*255,origin.y+dstcolor.g*255)
+
+    
+    // return pallet color
+	return imageSrc0At(palletPos)
+}
