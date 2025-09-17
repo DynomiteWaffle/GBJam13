@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	_ "embed"
 	"image/color"
 	"log"
@@ -13,17 +14,43 @@ import (
 
 // Game implements ebiten.Game interface.
 type Game struct {
-	logo        *ebiten.Image
-	palette     *ebiten.Image
+	palette    *ebiten.Image
+	logo       *ebiten.Image
+	background *ebiten.Image
+	buttons    *ebiten.Image
+	numbers    *ebiten.Image
+	plates     *ebiten.Image
+	roll       *ebiten.Image
+
 	EPPS        *ebiten.Shader
 	EPPSOptions *ebiten.DrawRectShaderOptions
 
 	buffer *ebiten.Image
 }
 
+// load assets
+//
 //go:embed EPPS.kage
 var EPPS []byte
 var game = &Game{}
+
+//go:embed assets/GBJam13Logo.png
+var rawLogo []byte
+
+//go:embed assets/BG.png
+var rawBackground []byte
+
+//go:embed assets/Buttons.png
+var rawButtons []byte
+
+//go:embed assets/numbers.png
+var rawNumbers []byte
+
+//go:embed assets/Plates.png
+var rawPlates []byte
+
+//go:embed assets/Roll.png
+var rawRoll []byte
 
 // Update proceeds the game state.
 // Update is called every tick (1/60 [s] by default).
@@ -39,6 +66,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// draw to buffer
 
 	g.buffer.DrawImage(g.logo, &ebiten.DrawImageOptions{})
+	g.buffer.DrawImage(g.background, &ebiten.DrawImageOptions{})
 
 	// real draw
 	screen.DrawRectShader(g.buffer.Bounds().Dx(), g.buffer.Bounds().Dy(), g.EPPS, g.EPPSOptions)
@@ -53,13 +81,35 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 func main() {
 
 	var err error
+	// load assets
 	// load shader
 	game.EPPS, err = ebiten.NewShader(EPPS)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	game.logo, _, err = ebitenutil.NewImageFromFile("GBJam13Logo.png")
+	// game.logo, _, err = ebitenutil.NewImageFromFile("GBJam13Logo.png")
+	game.logo, _, err = ebitenutil.NewImageFromReader(bytes.NewReader(rawLogo))
+	if err != nil {
+		log.Fatal(err)
+	}
+	game.background, _, err = ebitenutil.NewImageFromReader(bytes.NewReader(rawBackground))
+	if err != nil {
+		log.Fatal(err)
+	}
+	game.buttons, _, err = ebitenutil.NewImageFromReader(bytes.NewReader(rawButtons))
+	if err != nil {
+		log.Fatal(err)
+	}
+	game.numbers, _, err = ebitenutil.NewImageFromReader(bytes.NewReader(rawNumbers))
+	if err != nil {
+		log.Fatal(err)
+	}
+	game.plates, _, err = ebitenutil.NewImageFromReader(bytes.NewReader(rawPlates))
+	if err != nil {
+		log.Fatal(err)
+	}
+	game.roll, _, err = ebitenutil.NewImageFromReader(bytes.NewReader(rawRoll))
 	if err != nil {
 		log.Fatal(err)
 	}
