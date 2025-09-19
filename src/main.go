@@ -113,15 +113,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	// Buttons
 	moveOpt.GeoM.Reset()
 	if g.input.a && g.input.b {
-		println("Both")
+		// println("Both")
 		moveOpt.GeoM.Translate(0, -17*3)
 
 	} else if g.input.a {
-		println("a")
+		// println("a")
 		moveOpt.GeoM.Translate(0, -17)
 
 	} else if g.input.b {
-		println("b")
+		// println("b")
 		moveOpt.GeoM.Translate(0, -17*2)
 
 	}
