@@ -13,6 +13,17 @@ import (
 
 // controlls arrows/z/x
 
+type input struct {
+	up    bool
+	down  bool
+	left  bool
+	right bool
+	a     bool
+	b     bool
+	start bool
+	sel   bool
+}
+
 // Game implements ebiten.Game interface.
 type Game struct {
 	palette    *ebiten.Image
@@ -34,6 +45,8 @@ type Game struct {
 
 	plateState int
 	score      int
+	input      input
+	// prevInput  input
 }
 
 // load assets
@@ -61,9 +74,20 @@ var rawPlates []byte
 var rawRoll []byte
 
 // Update proceeds the game state.
+
 // Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
 	// Write your game's logical update.
+	g.input.up = ebiten.IsKeyPressed(ebiten.KeyArrowUp)
+	g.input.down = ebiten.IsKeyPressed(ebiten.KeyArrowDown)
+	g.input.left = ebiten.IsKeyPressed(ebiten.KeyArrowLeft)
+	g.input.right = ebiten.IsKeyPressed(ebiten.KeyArrowRight)
+
+	g.input.a = ebiten.IsKeyPressed(ebiten.KeyZ)
+	g.input.b = ebiten.IsKeyPressed(ebiten.KeyX)
+	g.input.start = ebiten.IsKeyPressed(ebiten.KeyA)
+	g.input.sel = ebiten.IsKeyPressed(ebiten.KeyS)
+
 	return nil
 }
 
@@ -86,12 +110,25 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	moveOpt.GeoM.Translate(0, -1*float64(g.platebuffer.Bounds().Dy()*g.plateState))
 	g.platebuffer.DrawImage(g.plates, &moveOpt)
 
-	// TODO
-	g.buttonbuffer.DrawImage(g.buttons, &ebiten.DrawImageOptions{})
+	// Buttons
+	moveOpt.GeoM.Reset()
+	if g.input.a && g.input.b {
+		println("Both")
+		moveOpt.GeoM.Translate(0, -17*3)
+
+	} else if g.input.a {
+		println("a")
+		moveOpt.GeoM.Translate(0, -17)
+
+	} else if g.input.b {
+		println("b")
+		moveOpt.GeoM.Translate(0, -17*2)
+
+	}
+	g.buttonbuffer.DrawImage(g.buttons, &moveOpt)
 
 	// TODO rolls
 	g.rollsbuffer.DrawImage(g.roll, &ebiten.DrawImageOptions{})
-	// TODO numbers
 
 	// draw score
 	numstr := strconv.Itoa(g.score)
