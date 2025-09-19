@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"image/color"
 	"log"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -25,7 +26,14 @@ type Game struct {
 	EPPS        *ebiten.Shader
 	EPPSOptions *ebiten.DrawRectShaderOptions
 
-	buffer *ebiten.Image
+	buffer       *ebiten.Image
+	numberbuffer *ebiten.Image
+	rollsbuffer  *ebiten.Image
+	platebuffer  *ebiten.Image
+	buttonbuffer *ebiten.Image
+
+	plateState int
+	score      int
 }
 
 // load assets
@@ -63,13 +71,66 @@ func (g *Game) Update() error {
 // Draw is called every frame (typically 1/60[s] for 60Hz display).
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.buffer.Clear()
-	// draw to buffer
 
+	// draw to main buffer
 	g.buffer.DrawImage(g.logo, &ebiten.DrawImageOptions{})
 	g.buffer.DrawImage(g.background, &ebiten.DrawImageOptions{})
+	moveOpt := ebiten.DrawImageOptions{}
+
+	// draw onto buffers
+	moveOpt.GeoM.Translate(0, -1*float64(g.platebuffer.Bounds().Dy()*g.plateState))
+	g.platebuffer.DrawImage(g.plates, &moveOpt)
+
+	// TODO
+	g.buttonbuffer.DrawImage(g.buttons, &ebiten.DrawImageOptions{})
+
+	// TODO rolls
+	g.rollsbuffer.DrawImage(g.roll, &ebiten.DrawImageOptions{})
+	// TODO numbers
+
+	// draw score
+	numstr := strconv.Itoa(g.score)
+	// lengthen score to 10 digits
+	for i := len(numstr); i < 10; i++ {
+		// print(i)
+		numstr = "0" + numstr
+	}
+
+	moveOpt.GeoM.Reset()
+	moveOpt.GeoM.Translate(-7, 0)
+	for _, v := range numstr {
+		moveOpt.GeoM.Translate(float64(g.numbers.Bounds().Dx()+2), 0)
+		if v >= 49 && v <= 57 {
+			moveOpt.GeoM.Translate(0, float64(v-48)*-9)
+		}
+
+		g.numberbuffer.DrawImage(g.numbers, &moveOpt)
+
+		if v >= 49 && v <= 57 {
+			moveOpt.GeoM.Translate(0, float64(v-48)*9)
+		}
+	}
+
+	// draw to buffers
+	moveOpt.GeoM.Reset()
+	moveOpt.GeoM.Translate(46, 23)
+	g.buffer.DrawImage(g.numberbuffer, &moveOpt)
+
+	moveOpt.GeoM.Reset()
+	moveOpt.GeoM.Translate(48, 44)
+	g.buffer.DrawImage(g.rollsbuffer, &moveOpt)
+
+	moveOpt.GeoM.Reset()
+	moveOpt.GeoM.Translate(32, 88)
+	g.buffer.DrawImage(g.platebuffer, &moveOpt)
+
+	moveOpt.GeoM.Reset()
+	moveOpt.GeoM.Translate(56, 96)
+	g.buffer.DrawImage(g.buttonbuffer, &moveOpt)
 
 	// real draw
 	screen.DrawRectShader(g.buffer.Bounds().Dx(), g.buffer.Bounds().Dy(), g.EPPS, g.EPPSOptions)
+
 }
 
 // Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
@@ -116,6 +177,20 @@ func main() {
 	// init palette
 	game.palette = ebiten.NewImage(160, 144)
 	game.buffer = ebiten.NewImage(160, 144)
+
+	game.numberbuffer = ebiten.NewImage(68, 9)
+	// game.numberbuffer.Fill(color.White)
+
+	game.rollsbuffer = ebiten.NewImage(64, 38)
+	// game.rollsbuffer.Fill(color.White)
+
+	game.platebuffer = ebiten.NewImage(96, 36)
+	// game.platebuffer.Fill(color.White)
+
+	game.buttonbuffer = ebiten.NewImage(48, 17)
+	// game.buttonbuffer.Fill(color.White)
+
+	game.score = 5000
 
 	game.palette.Set(1, 0, color.RGBA{R: 56, G: 28, B: 46, A: 255})
 	game.palette.Set(2, 0, color.RGBA{R: 105, G: 109, B: 109, A: 255})
