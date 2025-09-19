@@ -23,6 +23,18 @@ type input struct {
 	start bool
 	sel   bool
 }
+type rolls struct {
+	roll1pos int
+	roll1to  int
+
+	roll2pos int
+	roll2to  int
+
+	roll3pos int
+	roll3to  int
+
+	rolling bool
+}
 
 // Game implements ebiten.Game interface.
 type Game struct {
@@ -46,6 +58,7 @@ type Game struct {
 	plateState int
 	score      int
 	input      input
+	rolls      rolls
 	// prevInput  input
 }
 
@@ -76,6 +89,8 @@ var rawRoll []byte
 // Update proceeds the game state.
 
 // Update is called every tick (1/60 [s] by default).
+var ticks int
+
 func (g *Game) Update() error {
 	// Write your game's logical update.
 	g.input.up = ebiten.IsKeyPressed(ebiten.KeyArrowUp)
@@ -88,6 +103,33 @@ func (g *Game) Update() error {
 	g.input.start = ebiten.IsKeyPressed(ebiten.KeyA)
 	g.input.sel = ebiten.IsKeyPressed(ebiten.KeyS)
 
+	// TODO game logic
+	// roll animation
+	if g.rolls.rolling && ticks%5 == 0 {
+		g.rolls.roll1pos++
+		g.rolls.roll2pos++
+		g.rolls.roll3pos++
+	}
+
+	// cap rolls
+	if g.rolls.roll1pos > 6 {
+		g.rolls.roll1pos = 0
+	} else if g.rolls.roll1pos < 0 {
+		g.rolls.roll1pos = 6
+	}
+
+	if g.rolls.roll2pos > 6 {
+		g.rolls.roll2pos = 0
+	} else if g.rolls.roll2pos < 0 {
+		g.rolls.roll2pos = 6
+	}
+
+	if g.rolls.roll3pos > 6 {
+		g.rolls.roll3pos = 0
+	} else if g.rolls.roll3pos < 0 {
+		g.rolls.roll3pos = 6
+	}
+	ticks++
 	return nil
 }
 
@@ -107,6 +149,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	moveOpt := ebiten.DrawImageOptions{}
 
 	// draw onto buffers
+	// plate
 	moveOpt.GeoM.Translate(0, -1*float64(g.platebuffer.Bounds().Dy()*g.plateState))
 	g.platebuffer.DrawImage(g.plates, &moveOpt)
 
@@ -127,8 +170,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 	g.buttonbuffer.DrawImage(g.buttons, &moveOpt)
 
-	// TODO rolls
-	g.rollsbuffer.DrawImage(g.roll, &ebiten.DrawImageOptions{})
+	//rolls
+	moveOpt.GeoM.Reset()
+	moveOpt.GeoM.Translate(0, float64(g.rolls.roll1pos*-19)-8)
+	g.rollsbuffer.DrawImage(g.roll, &moveOpt)
+
+	moveOpt.GeoM.Reset()
+	moveOpt.GeoM.Translate(24, float64(g.rolls.roll2pos*-19)-8)
+	g.rollsbuffer.DrawImage(g.roll, &moveOpt)
+
+	moveOpt.GeoM.Reset()
+	moveOpt.GeoM.Translate(48, float64(g.rolls.roll3pos*-19)-8)
+	g.rollsbuffer.DrawImage(g.roll, &moveOpt)
 
 	// draw score
 	numstr := strconv.Itoa(g.score)
@@ -233,6 +286,10 @@ func main() {
 	// game.buttonbuffer.Fill(color.White)
 
 	game.score = 5000
+	game.rolls.roll1pos = 0
+	game.rolls.roll2pos = 0
+	game.rolls.roll3pos = 0
+	game.rolls.rolling = true
 
 	game.palette.Set(1, 0, color.RGBA{R: 56, G: 28, B: 46, A: 255})
 	game.palette.Set(2, 0, color.RGBA{R: 105, G: 109, B: 109, A: 255})
